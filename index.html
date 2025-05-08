@@ -198,7 +198,7 @@
                     <td>{{ product.name }}</td>
                     <td>{{ product.brand || '-' }}</td>
                     <td>{{ product.tan_type }}</td>
-                    <td>€{{ product.price.toFixed(2) }}</td>
+                    <td>{{ product.price.toFixed(2) }}</td>
                     <td>
                         <button class="action-button edit" @click="editProduct(product)">Изменить</button>
                         <button class="action-button delete" @click="deleteProduct(product.id)">Удалить</button>
