@@ -169,7 +169,7 @@
 <!-- Контейнер для управления продуктами и контактами -->
 <div id="app" class="container">
     <div class="file-upload-wrapper">
-		<button class="download-button" @click="saveDataToJsonBin">Сохранить данные в JSON</button>
+		<button class="download-button" @click="saveDataToGist">Сохранить данные в JSON</button>
 	</div>
 
     <div class="tabs">
@@ -586,23 +586,33 @@ new Vue({
             this.isEditingFaq = false;
             this.errors = {};
         },
-        async saveDataToJsonBin() {
-		    const binId = '681c9ce78561e97a500fec24';
-			const apiKey = '$2a$10$wVEfmzIO0EeHOvg8x4oNEOWHJgzIYW5z5HmluHqXBLecCChC820Ji';
+        async saveDataToGist() {
+			const gistId = '5adb857ff5f87b42c0d5b44d52ebd49e';
+			const token = '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';
 			const data = {
 				products: this.products,
 				contact: this.contact,
 				faqs: this.faqs
 			};
+
 			try {
-				const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-					method: 'PUT',
+				const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+					method: 'PATCH',
 					headers: {
-						'Content-Type': 'application/json',
-						'X-Master-Key': apiKey
+						'Authorization': `token ${token}`,
+						'Accept': 'application/vnd.github.v3+json',
+						'Content-Type': 'application/json'
 					},
-					body: JSON.stringify(data)
+					body: JSON.stringify({
+						description: 'Updated data',
+						files: {
+							'tadi.json': {
+								content: JSON.stringify(data, null, 2)
+							}
+						}
+					})
 				});
+
 				if (response.ok) {
 					alert('Данные успешно сохранены!');
 				} else {
@@ -612,70 +622,35 @@ new Vue({
 				alert('Ошибка при сохранении данных.');
 			}
 		},
-        async loadDataFromJsonBin() {
-		    const binId = '681c9ce78561e97a500fec24';
-			const apiKey = '$2a$10$wVEfmzIO0EeHOvg8x4oNEOWHJgzIYW5z5HmluHqXBLecCChC820Ji';
-            try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-                    headers: {
-                        'X-Master-Key': apiKey
-                    }
-                });
-                const data = await response.json();
-                this.products = data.record.products || [];
-                this.contact = data.record.contact || null;
-                this.faqs = data.record.faqs || [];
-                console.log('Данные успешно загружены!');
-            } catch (error) {
-                console.error('Ошибка при загрузке данных:', error);
-            }
-        }
+		async loadDataFromGist() {
+			const gistId = '5adb857ff5f87b42c0d5b44d52ebd49e';
+			const token = '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';
+
+			try {
+				const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+					headers: {
+						'Authorization': `token ${token}`,
+						'Accept': 'application/vnd.github.v3+json'
+					}
+				});
+
+				const data = await response.json();
+				const content = JSON.parse(data.files['tadi.json'].content);
+
+				this.products = content.products || [];
+				this.contact = content.contact || null;
+				this.faqs = content.faqs || [];
+
+				console.log('Данные успешно загружены!');
+			} catch (error) {
+				console.error('Ошибка при загрузке данных:', error);
+			}
+		}
     },
 	mounted() {
-        this.loadDataFromJsonBin();
+        this.loadDataFromGist();
     }
 });
-/*
-downloadJson() {
-            const data = {
-                products: this.products,
-                contact: this.contact,
-                faqs: this.faqs
-            };
-            const jsonData = JSON.stringify(data, null, 2);
-            const blob = new Blob([jsonData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'data.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        },
-        uploadJson(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (data) {
-                            this.products = data.products || [];
-                            this.contact = data.contact || null;
-                            this.faqs = data.faqs || [];
-                            alert('Данные успешно загружены!');
-                        } else {
-                            alert('Неверный формат файла.');
-                        }
-                    } catch (error) {
-                        alert('Ошибка при чтении файла.');
-                    }
-                };
-                reader.readAsText(file);
-            }
-        }
-*/
 </script>
 
 </body>
